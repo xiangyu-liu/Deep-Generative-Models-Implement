@@ -167,7 +167,7 @@ def visualize_q3_data():
 
 def q3_save_results(fn, part):
     data_dir = get_data_dir(2)
-    train_data, test_data = load_pickled_data(r'C:\Users\11818\Desktop\BGA\deepul\homeworks\hw2\data\celeb.pkl')
+    train_data, test_data = load_pickled_data(r'/newNAS/Workspaces/DRLGroup/xiangyuliu/CS294/homeworks/hw2/data/celeb.pkl')
 
     train_losses, test_losses, samples, interpolations = fn(train_data, test_data)
     samples = samples.astype('float')
