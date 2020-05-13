@@ -1,7 +1,5 @@
 # Implementation for Deep Generative Models
 
-(Homework for Berkeley CS 294-158 Deep Unsupervised Learning)
-
 - **Autoregressive Model (hw1)**
 
   - MADE
@@ -84,3 +82,6 @@
         <img src="assets/1589413397603.png" width="350">
         <img src="assets/1589413414568.png" width="350">
     </figure>
+
+(Homework for Berkeley CS 294-158 Deep Unsupervised Learning)
+
