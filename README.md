@@ -7,7 +7,7 @@
   - MADE
 
     <figure class="half">
-        <img src="C:\Users\11818\AppData\Roaming\Typora\typora-user-images\1589412519121.png" width="350">
+        <img src="assets\1589412519121.png" width="350">
         <img src="C:\Users\11818\AppData\Roaming\Typora\typora-user-images\1589412531154.png" width="350">
     </figure>
 
