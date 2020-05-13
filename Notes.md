@@ -1,25 +1,4 @@
-# CS 294-158 Deep Unsupervised Learning
-Implementation for generative models, including
-
-- Autoregressive Model
-  - MADE
-  - PixelCNN (Independent Color Channels)
-  - PixelCNN (Autoregressive Color Channels)
-  - Conditional PixelCNNs
-- Flow Model
-  - Autoregressive Flow
-  - RealNVP
-- Latent Variable Model
-  - VAE
-  - VAE + AF Prior
-  - VQ-VAE + PixelCNN Prior
-- GANs
-  - Vanilla GAN
-  - WGAN-GP
-  - BiGAN
-  - CycleGAN
-
-## Some Pytorch Notes
+# Notes
 
 ### From HW1
 
