@@ -7,8 +7,8 @@
   - MADE
 
     <figure class="half">
-        <img src="assets\1589412519121.png" width="350">
-        <img src="C:\Users\11818\AppData\Roaming\Typora\typora-user-images\1589412531154.png" width="350">
+        <img src="assets/1589412519121.png" width="350">
+        <img src="assets/1589412531154.png" width="350">
     </figure>
 
     
@@ -16,22 +16,22 @@
   - PixelCNN (Independent Color Channels)
 
     <figure class="half">
-        <img src="C:\Users\11818\AppData\Roaming\Typora\typora-user-images\1589412269396.png" width="350">
-        <img src="C:\Users\11818\AppData\Roaming\Typora\typora-user-images\1589412845382.png" width="350">
+        <img src="assets/1589412269396.png" width="350">
+        <img src="assets/1589412845382.png" width="350">
     </figure>
 
   - PixelCNN (Autoregressive Color Channels)
 
     <figure class="half">
-        <img src="C:\Users\11818\AppData\Roaming\Typora\typora-user-images\1589412820955.png" width="350">
-        <img src="C:\Users\11818\AppData\Roaming\Typora\typora-user-images\1589412753289.png" width="350">
+        <img src="assets/1589412820955.png" width="350">
+        <img src="assets/1589412753289.png" width="350">
     </figure>
 
   - Conditional PixelCNNs
 
     <figure class="half">
-        <img src="C:\Users\11818\AppData\Roaming\Typora\typora-user-images\1589412938873.png" width="350">
-        <img src="C:\Users\11818\AppData\Roaming\Typora\typora-user-images\1589412104448.png" width="350">
+        <img src="assets/1589412938873.png" width="350">
+        <img src="assets/1589412104448.png" width="350">
     </figure>
 
 - **Flow Model (hw2)**
@@ -41,8 +41,8 @@
   - RealNVP
 
     <figure class="half">
-        <img src="C:\Users\11818\AppData\Roaming\Typora\typora-user-images\1589412380127.png" width="350">
-        <img src="C:\Users\11818\AppData\Roaming\Typora\typora-user-images\1589413022754.png" width="350">
+        <img src="assets/1589412380127.png" width="350">
+        <img src="assets/1589413022754.png" width="350">
     </figure>
 
 - **Latent Variable Model (hw3)**
@@ -52,15 +52,15 @@
   - VAE + AF Prior
 
     <figure class="half">
-        <img src="C:\Users\11818\AppData\Roaming\Typora\typora-user-images\1589413181453.png" width="350">
-        <img src="C:\Users\11818\AppData\Roaming\Typora\typora-user-images\1589413187114.png" width="350">
+        <img src="assets/1589413181453.png" width="350">
+        <img src="assets/1589413187114.png" width="350">
     </figure>
 
   - VQ-VAE + PixelCNN Prior
 
     <figure class="half">
-        <img src="C:\Users\11818\AppData\Roaming\Typora\typora-user-images\1589413230581.png" width="350">
-        <img src="C:\Users\11818\AppData\Roaming\Typora\typora-user-images\1589413235641.png" width="350">
+        <img src="assets/1589413230581.png" width="350">
+        <img src="assets/1589413235641.png" width="350">
     </figure>
 
 - **GANs (hw4)**
@@ -69,18 +69,18 @@
 
   - WGAN-GP
 
-    ![1589413325569](C:\Users\11818\AppData\Roaming\Typora\typora-user-images\1589413325569.png)
+    ![1589413325569](assets/1589413325569.png)
 
   - BiGAN
 
     <figure class="half">
-        <img src="C:\Users\11818\AppData\Roaming\Typora\typora-user-images\1589413335189.png" width="350">
-        <img src="C:\Users\11818\AppData\Roaming\Typora\typora-user-images\1589413341073.png" width="350">
+        <img src="assets/1589413335189.png" width="350">
+        <img src="assets/1589413341073.png" width="350">
     </figure>
 
   - CycleGAN
 
     <figure class="half">
-        <img src="C:\Users\11818\AppData\Roaming\Typora\typora-user-images\1589413397603.png" width="350">
-        <img src="C:\Users\11818\AppData\Roaming\Typora\typora-user-images\1589413414568.png" width="350">
+        <img src="assets/1589413397603.png" width="350">
+        <img src="assets/1589413414568.png" width="350">
     </figure>
