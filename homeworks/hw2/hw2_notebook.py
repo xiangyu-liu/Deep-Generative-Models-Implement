@@ -10,11 +10,10 @@ np.random.seed(0)
 
 
 def update_lr(optimizer, epoch):
-    # for param_group in optimizer.param_groups:
-    #     param_group['lr'] *= 0.5 ** (epoch // 5)
-    #     if param_group['lr'] <= 5e-9:
-    #         param_group['lr'] = 5e-9
-    pass
+    for param_group in optimizer.param_groups:
+        param_group['lr'] += 5e-4 / 500
+        if param_group['lr'] >= 7e-4:
+            param_group['lr'] = 7e-4
 
 
 def train(model, train_loader, optimizer, epoch, grad_clip=None):
@@ -23,6 +22,8 @@ def train(model, train_loader, optimizer, epoch, grad_clip=None):
     train_losses = []
     device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
     for x in train_loader:
+        x = x + np.random.random(size=x.shape)
+        x = 0.05 + (1 - 0.05) * (x / 4)
         x = x.to(device)
         loss = model.loss(x)
         optimizer.zero_grad()
@@ -31,6 +32,7 @@ def train(model, train_loader, optimizer, epoch, grad_clip=None):
             torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
         optimizer.step()
         train_losses.append(loss.item())
+        update_lr(optimizer, epoch)
     return train_losses
 
 
@@ -48,12 +50,13 @@ def eval_loss(model, data_loader):
     return avg_loss.item()
 
 
-def train_epochs(model, train_loader, test_loader, train_args, best_model=None, sample_list=[]):
+def train_epochs(model, train_loader, test_loader, train_args, best_model=None, sample_list=[], inter_image=None):
     epochs, lr = train_args['epochs'], train_args['lr']
     grad_clip = train_args.get('grad_clip', None)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     train_losses = []
     test_losses = [eval_loss(model, test_loader)]
+    print(f"initial test loss is {test_losses[0]}")
     best_loss = 1e8
     for epoch in range(epochs):
         model.train()
@@ -64,9 +67,9 @@ def train_epochs(model, train_loader, test_loader, train_args, best_model=None, 
             best_loss = test_loss
             best_model.load_state_dict(model.state_dict())
         print(f'Epoch {epoch}, Test loss {test_loss:.4f}')
-        update_lr(optimizer, epoch)
     print(f"best loss is {best_loss}")
     sample_list.append(best_model.sample())
+    sample_list.append(best_model.interpolation())
     return train_losses, test_losses
 
 
@@ -102,7 +105,7 @@ class Made(torch.nn.Module):
         self.masked_matrix_list = masked_matrix_list
 
     def forward(self, inputs):
-        device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
+        device = torch.device("cuda:1" if torch.cuda.is_available() else 'cpu')
         inputs = inputs.to(device)
         tmp = self.relu(self.fc1(inputs))
         tmp = self.relu(self.fc2(tmp))
@@ -159,6 +162,9 @@ class ARFlow(nn.Module):
     def log_prob(self, inputs):
         return self(inputs)[2]
 
+    def sample(self):
+        pass
+
 
 def q1_a(train_data, test_data, dset_id):
     """
@@ -178,13 +184,14 @@ def q1_a(train_data, test_data, dset_id):
     """
 
     """ YOUR CODE HERE """
-    device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
+    device = torch.device("cuda:1" if torch.cuda.is_available() else 'cpu')
     num_gauss = 10
     model = ARFlow(num_gauss, [2, 100, 100, 6 * num_gauss]).to(device)
+    best_model = ARFlow(num_gauss, [2, 100, 100, 6 * num_gauss]).to(device)
     train_loader = torch.utils.data.DataLoader(train_data, batch_size=128, shuffle=True)
     test_loader = torch.utils.data.DataLoader(test_data, batch_size=128)
     train_losses, test_losses = train_epochs(model, train_loader, test_loader,
-                                             dict(epochs=200, lr=1e-2))
+                                             dict(epochs=200, lr=1e-2), best_model)
     # heatmap
     dx, dy = 0.025, 0.025
     if dset_id == 1:  # face
@@ -272,7 +279,7 @@ def q1_b(train_data, test_data, dset_id):
     - a numpy array of size (n_train, 2) of floats in R^2. This represents
         mapping the train set data points through our flow to the latent space.
     """
-    device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
+    device = torch.device("cuda:1" if torch.cuda.is_available() else 'cpu')
     num_flow = 10
     model = RealNVP(num_flow).to(device)
     train_loader = torch.utils.data.DataLoader(train_data, batch_size=128, shuffle=True)
@@ -442,7 +449,7 @@ def q2(train_data, test_data):
     """
 
     """ YOUR CODE HERE """
-    device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
+    device = torch.device("cuda:1" if torch.cuda.is_available() else 'cpu')
     num_gauss = 10
     model = PixelCNN(1, num_gauss * 3).to(device)
     best_model = PixelCNN(1, num_gauss * 3).to(device)
@@ -464,11 +471,11 @@ def plot_q2():
 class ResnetBlock(nn.Module):
     def __init__(self, n_filters):
         super().__init__()
-        self.net = nn.Sequential(nn.utils.weight_norm(nn.Conv2d(n_filters, n_filters, 1, 1, 0)),
+        self.net = nn.Sequential(nn.Conv2d(n_filters, n_filters, 1, 1, 0),
                                  nn.ReLU(),
-                                 nn.utils.weight_norm(nn.Conv2d(n_filters, n_filters, 3, 1, 1)),
+                                 nn.Conv2d(n_filters, n_filters, 3, 1, 1),
                                  nn.ReLU(),
-                                 nn.utils.weight_norm(nn.Conv2d(n_filters, n_filters, 1, 1, 0)))
+                                 nn.Conv2d(n_filters, n_filters, 1, 1, 0))
 
     def forward(self, inputs):
         return self.net(inputs) + inputs
@@ -593,15 +600,17 @@ class HighDimRealNVP(nn.Module):
              ActNorm(n_out // 2),
              AffineCoupling(n_filters, n_block, n_in, n_out, self.mask_checker),
              ActNorm(n_out // 2),
-             AffineCoupling(n_filters, n_block, n_in, n_out, 1 - self.mask_checker)
-            ])
+             AffineCoupling(n_filters, n_block, n_in, n_out, 1 - self.mask_checker),
+             ActNorm(n_out // 2)
+             ])
 
         self.affine_coupling_channel = nn.ModuleList(
             [AffineCoupling(n_filters, n_block, 4 * n_in, 4 * n_out, self.mask_channel),
              ActNorm(2 * n_out),
              AffineCoupling(n_filters, n_block, 4 * n_in, 4 * n_out, 1 - self.mask_channel),
              ActNorm(2 * n_out),
-             AffineCoupling(n_filters, n_block, 4 * n_in, 4 * n_out, self.mask_channel)
+             AffineCoupling(n_filters, n_block, 4 * n_in, 4 * n_out, self.mask_channel),
+             ActNorm(2 * n_out)
              ])
 
         self.affine_coupling_checker2 = nn.ModuleList(
@@ -609,7 +618,8 @@ class HighDimRealNVP(nn.Module):
              ActNorm(n_out // 2),
              AffineCoupling(n_filters, n_block, n_in, n_out, 1 - self.mask_checker),
              ActNorm(n_out // 2),
-             AffineCoupling(n_filters, n_block, n_in, n_out, self.mask_checker)])
+             AffineCoupling(n_filters, n_block, n_in, n_out, self.mask_checker),
+             ActNorm(n_out // 2)])
 
     def forward(self, inputs):
         device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
@@ -675,7 +685,7 @@ class HighDimRealNVP(nn.Module):
             image_list.append(x[2 * i].unsqueeze(0))
             for coeff in lamda:
                 latent_code = coeff * inputs[2 * i].unsqueeze(0) + (1 - coeff) * inputs[2 * i + 1].unsqueeze(0)
-                image_list.append(torch.clamp((self.inverse(latent_code)-0.05)/0.95, 0, 1))
+                image_list.append(torch.clamp((self.inverse(latent_code) - 0.05) / 0.95, 0, 1))
             image_list.append(x[2 * i + 1].unsqueeze(0))
         return torch.cat(image_list, dim=0).cpu().data.numpy()
 
@@ -731,21 +741,29 @@ def q3_a(train_data, test_data):
     - a numpy array of size (30, H, W, 3) of interpolations with values in [0, 1].
     """
 
-    device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
-    model = HighDimRealNVP((train_data.shape[1], train_data.shape[2], 3), 128, 6, 3, 6).to(device)
-    best_model = HighDimRealNVP((train_data.shape[1], train_data.shape[2], 3), 128, 6, 3, 6).to(device)
+    device = torch.device("cuda:1" if torch.cuda.is_available() else 'cpu')
+    model = HighDimRealNVP((train_data.shape[1], train_data.shape[2], 3), 128, 8, 3, 6)
+    best_model = HighDimRealNVP((train_data.shape[1], train_data.shape[2], 3), 128, 8, 3, 6)
+
+    model = model.to(device)
+    best_model = best_model.to(device)
+
+    # model = nn.DataParallel(model).module
+    # best_model = nn.DataParallel(best_model).module
+
     sample = []
 
     alpha = 0.05
-    inter_image = train_data[0:10]
-    train_data = train_data + np.random.random(size=train_data.shape)
-    train_data = alpha + (1 - alpha) * (train_data / 4)
+    inter_image = train_data[10:20]
+    # train_data = train_data + np.random.random(size=train_data.shape)
+    # train_data = alpha + (1 - alpha) * (train_data / 4)
     test_data = test_data + np.random.random(size=test_data.shape)
     test_data = alpha + (1 - alpha) * (test_data / 4)
 
     train_loader = torch.utils.data.DataLoader(train_data, batch_size=48, shuffle=True)
     test_loader = torch.utils.data.DataLoader(test_data, batch_size=48)
-    train_losses, test_losses = train_epochs(model, train_loader, test_loader, dict(epochs=30, lr=5e-6, grad_clip=1, decay=0.95, end=1e-8), best_model,
+    train_losses, test_losses = train_epochs(model, train_loader, test_loader,
+                                             dict(epochs=120, lr=0, grad_clip=10, decay=0.95, end=1e-8), best_model,
                                              sample)
 
     return train_losses, test_losses, sample[0], model.interpolation(torch.from_numpy(alpha + (1 - alpha) * (inter_image / 4)).float())
@@ -784,15 +802,10 @@ class BadHighDimRealNVP(nn.Module):
         for layer in self.affine_coupling_checker1:
             inputs, tmp = layer(inputs)
             log_det = log_det + tmp
-        return inputs + log_det
+        outs = math.log(1 / math.sqrt(2 * math.pi)) - ((inputs ** 2) / 2)
+        return outs + log_det
 
     def inverse(self, z):
-        for layer in reversed(self.affine_coupling_checker2):
-            z = layer.inverse_sample(z)
-        z = self._squeeze_nxn(z)
-        for layer in reversed(self.affine_coupling_channel):
-            z = layer.inverse_sample(z)
-        z = self._unsqueeze_2x2(z)
         for layer in reversed(self.affine_coupling_checker1):
             z = layer.inverse_sample(z)
         return z
@@ -811,24 +824,16 @@ class BadHighDimRealNVP(nn.Module):
         x = inputs
         for layer in self.affine_coupling_checker1:
             inputs, _ = layer(inputs)
-        inputs = self._squeeze_nxn(inputs)
-
-        for layer in self.affine_coupling_channel:
-            inputs, _ = layer(inputs)
-        inputs = self._unsqueeze_2x2(inputs)
-
-        for layer in self.affine_coupling_checker2:
-            inputs, _ = layer(inputs)
 
         image_list = []
         lamda = [0.8, 0.6, 0.4, 0.2]
         for i in range(5):
-            image_list.append(x[2 * i].unsqueeze(0))
+            image_list.append(x[2 * i].unsqueeze(0).float())
             for coeff in lamda:
                 latent_code = coeff * inputs[2 * i].unsqueeze(0) + (1 - coeff) * inputs[2 * i + 1].unsqueeze(0)
-                image_list.append(self.inverse(latent_code))
-            image_list.append(x[2 * i + 1].unsqueeze(0))
-        return torch.cat(image_list, dim=0)
+                image_list.append(torch.clamp((self.inverse(latent_code) - 0.05) / 0.95, 0, 1).float())
+            image_list.append(x[2 * i + 1].unsqueeze(0).float())
+        return torch.cat(image_list, dim=0).cpu().data.numpy()
 
 
 def q3_b(train_data, test_data):
@@ -842,25 +847,30 @@ def q3_b(train_data, test_data):
     - a numpy array of size (100, H, W, 3) of samples with values in [0, 1]
     - a numpy array of size (30, H, W, 3) of interpolations with values in [0, 1].
     """
-    device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
-    model = BadHighDimRealNVP((train_data.shape[1], train_data.shape[2], 3), 128, 2, 3, 6).to(device)
-    best_model = BadHighDimRealNVP((train_data.shape[1], train_data.shape[2], 3), 128, 2, 3, 6).to(device)
+    device = torch.device("cuda:1" if torch.cuda.is_available() else 'cpu')
+
+    model = BadHighDimRealNVP((train_data.shape[1], train_data.shape[2], 3), 128, 8, 3, 6)
+    best_model = BadHighDimRealNVP((train_data.shape[1], train_data.shape[2], 3), 128, 8, 3, 6)
+
+    model = model.to(device)
+    best_model = best_model.to(device)
+
     sample = []
 
     alpha = 0.05
-    inter_image = train_data[0:10]
-    train_data = train_data + np.random.random(size=train_data.shape)
-    train_data = alpha + (1 - alpha) * (train_data / 4)
+    inter_image = train_data[10:20]
+    # train_data = train_data + np.random.random(size=train_data.shape)
+    # train_data = alpha + (1 - alpha) * (train_data / 4)
     test_data = test_data + np.random.random(size=test_data.shape)
     test_data = alpha + (1 - alpha) * (test_data / 4)
 
-    train_loader = torch.utils.data.DataLoader(train_data, batch_size=128, shuffle=True)
-    test_loader = torch.utils.data.DataLoader(test_data, batch_size=128)
-    train_losses, test_losses = train_epochs(model, train_loader, test_loader, dict(epochs=100, lr=1e-7), best_model,
-                                             sample)
+    train_loader = torch.utils.data.DataLoader(train_data, batch_size=32, shuffle=True)
+    test_loader = torch.utils.data.DataLoader(test_data, batch_size=32)
+    train_losses, test_losses = train_epochs(model, train_loader, test_loader, dict(epochs=120, lr=0, grad_clip=1),
+                                             best_model,
+                                             sample, torch.from_numpy(alpha + (1 - alpha) * (inter_image / 4)).float())
 
-    return train_losses, test_losses, sample[0], model.interpolation(
-        torch.from_numpy(alpha + (1 - alpha) * (inter_image / 4)).float())
+    return train_losses, test_losses, sample[0], sample[1]
 
 
 def plot_q3b():
@@ -906,4 +916,4 @@ def plot_q4b():
 
 
 if __name__ == '__main__':
-    plot_q3a()
+    plot_q3b()
